@@ -1,0 +1,36 @@
+# Private tools, dependencies, app binaries, emulator state and capture material.
+/tools/
+/build/
+/dist/
+/private/
+
+# Publish only reviewed summaries, never APK-derived source or device artifacts.
+/research/*
+!/research/NOTES.md
+!/research/ROOT_SIGNAL_ANALYSIS.md
+!/research/EMULATOR_CAPTURE.md
+
+__pycache__/
+*.py[cod]
+*.class
+*.log
+*.apk
+*.apks
+*.aab
+*.dex
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.pem
+*.key
+*.pcap
+*.pcapng
+*.keylog
+*.har
+*.jsonl
+.env
+.env.*
+local.properties
+.idea/
+.vscode/
