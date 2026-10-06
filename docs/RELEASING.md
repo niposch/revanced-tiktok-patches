@@ -45,10 +45,26 @@ python scripts/PackageRelease.py
 ```
 
 This verifies `HEAD`, packages committed source with `git archive`, and writes
-the production bundle, source ZIP, checksums and combined release ZIP under
+the production bundle, source ZIP, Manager update feed `patches.json`, checksums
+and combined release ZIP under
 ignored `dist/releases/`. It refuses dirty tracked/staged files and checks that
 the bundle matches the committed version. Installed app data is not touched.
 Package content is local and reviewable; this script does not upload anything.
+
+Upload `patches.json` alongside the versioned `.rvp` on every published release.
+Manager's permanent source URL is:
+
+```text
+https://github.com/niposch/revanced-tiktok-patches/releases/latest/download/patches.json
+```
+
+The feed uses Manager's `download_url`, `created_at`, `description` and `version`
+fields. The download URL is pinned to that release's versioned bundle; the
+permanent feed URL follows GitHub's latest published release. Packaging derives
+the feed version from `VERSION` and its timestamp from the commit in UTC, without
+a timezone suffix as required by Manager's `LocalDateTime` field. Publish the
+complete asset set before marking a new release latest. A new patch version
+updates the bundle in Manager; users still need to patch and install the app again.
 
 Before publishing a subsequent release, run the behavior and APK-derived checks
 documented in README and review the changelog. APK fixtures and private captures

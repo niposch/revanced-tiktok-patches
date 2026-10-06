@@ -18,8 +18,17 @@ not automatically classified as platform ads.
 
 ## Use with ReVanced Manager
 
-Build or obtain `tiktok-feed-filters-1.2.0.rvp`, then import it from Manager's
-**Patches** tab using **Select from storage**. Select an original TikTok 47.1.4 APK.
+In Manager, open **Patches**, tap the pencil, then **+** and **Enter URL**.
+Use this permanent update feed and keep automatic updates enabled:
+
+```text
+https://github.com/niposch/revanced-tiktok-patches/releases/latest/download/patches.json
+```
+
+The feed follows the latest published release. It updates the patch bundle;
+apply the patches again to update an installed app.
+Alternatively, build or obtain `tiktok-feed-filters-1.2.0.rvp` and import it using
+**Select from storage**. Select an original TikTok 47.1.4 APK.
 Enable either or both content filters. For a separate installation, also select
 **Change package name**; its dependency applies **Fix device registration**.
 Select **Enable downloads** to enable saving restricted videos and photo posts.
@@ -27,9 +36,10 @@ This changes the app's download permission records; unavailable media and server
 access restrictions are outside its scope.
 
 The bundle targets Patcher 22 and was used with Manager 2.6.0. Compatibility with
-other Patcher APIs or TikTok versions is not claimed. Remove older copies of this
-bundle when importing an update. A patched APK update must use the same signing
-key as the installed app. Keep your signing key locally.
+other Patcher APIs or TikTok versions is not claimed. Remove older local copies of
+this bundle when switching to the remote feed or importing an update. A patched
+APK update must use the same signing key as the installed app. Keep your signing
+key locally.
 
 The APK is supplied by the person patching the app. App binaries, signing keys and
 device captures are not included in source or release archives.
