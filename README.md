@@ -17,7 +17,7 @@ not automatically classified as platform ads.
 
 ## Use with ReVanced Manager
 
-Build or obtain `tiktok-feed-filters-1.1.0.rvp`, then import it from Manager's
+Build or obtain `tiktok-feed-filters-1.1.1.rvp`, then import it from Manager's
 **Patches** tab using **Select from storage**. Select an original TikTok 47.1.4 APK.
 Enable either or both content filters. For a separate installation, also select
 **Change package name**; its dependency applies **Fix device registration**.
@@ -42,7 +42,7 @@ Set `JAVA_HOME` to your JDK if it is not detected under Program Files.
 The build downloads and checksums pinned official ReVanced CLI 6.0.0 and R8
 8.13.17 binaries into ignored `tools/`. It compiles Java definitions, runs runtime
 behavior tests, and packages both JVM classes and Android DEX in
-`dist/tiktok-feed-filters-1.1.0.rvp`. Neither Maven credentials nor Gradle is required.
+`dist/tiktok-feed-filters-1.1.1.rvp`. Neither Maven credentials nor Gradle is required.
 
 The source and bundle contain only the four production patches and two runtime
 helpers. The repository also includes the fixtures, tests and validation/release
@@ -54,7 +54,7 @@ build has no diagnostic mode and embeds no local certificates.
 
 ```powershell
 java -Xmx6g -jar tools/revanced-cli.jar patch input.apk `
-  -p dist/tiktok-feed-filters-1.1.0.rvp -b `
+  -p dist/tiktok-feed-filters-1.1.1.rvp -b `
   -e 'Change package name' `
   -o dist/tiktok-filtered.apk -t build/local-patch `
   --keystore dist/local-signing.keystore
@@ -79,9 +79,9 @@ APK-derived integration checks are run against a locally supplied original APK:
 ```powershell
 javac -cp tools/revanced-cli.jar -d build/validation-tools `
   scripts/ValidateExtension.java scripts/ValidatePatches.java scripts/ValidateRegistration.java
-java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateExtension input.apk dist/tiktok-feed-filters-1.1.0.rvp
-java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidatePatches input.apk dist/tiktok-feed-filters-1.1.0.rvp build/integration
-java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateRegistration input.apk dist/tiktok-feed-filters-1.1.0.rvp build/registration-validation
+java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateExtension input.apk dist/tiktok-feed-filters-1.1.1.rvp
+java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidatePatches input.apk dist/tiktok-feed-filters-1.1.1.rvp build/integration
+java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateRegistration input.apk dist/tiktok-feed-filters-1.1.1.rvp build/registration-validation
 ```
 
 Registration repair restored nonzero device IDs in a controlled capture and

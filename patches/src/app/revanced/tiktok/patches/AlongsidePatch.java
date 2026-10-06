@@ -74,6 +74,34 @@ public final class AlongsidePatch {
                 }
                 System.out.println("Made " + fixed + " empty image placeholders compilable");
             } catch (Exception exception) { throw new IllegalStateException("Could not normalize empty resources", exception); }
+            // APKTool loses this obfuscated string reference while decoding
+            // 47.1.4. Without it the shared bottom-sheet dialog throws during
+            // setContentView, then displays an empty window that captures input.
+            // Use the class name verified against the original app's resources.
+            try (var document = context.document("res/layout/bl_.xml")) {
+                var nodes = document.getElementsByTagName("FrameLayout");
+                int restored = 0;
+                for (int i = 0; i < nodes.getLength(); i++) {
+                    Element node = (Element) nodes.item(i);
+                    // The document reader retains qualified names but does not
+                    // expose their namespace URI. APKTool may choose any prefix.
+                    boolean container = false;
+                    var named = node.getAttributes();
+                    for (int j = 0; j < named.getLength(); j++) {
+                        var attribute = named.item(j);
+                        if (attribute.getNodeName().endsWith(":id") && attribute.getNodeValue().equals("@id/g3d")) container = true;
+                    }
+                    if (!container) continue;
+                    String behavior = node.getAttribute("c4g");
+                    String expected = "com.google.android.material.bottomsheet.BottomSheetBehavior";
+                    if (!behavior.equals("@null") && !behavior.equals(expected)) {
+                        throw new IllegalStateException("Unexpected bottom-sheet behavior declaration");
+                    }
+                    node.setAttribute("c4g", expected);
+                    restored++;
+                }
+                if (restored != 1) throw new IllegalStateException("Expected one shared bottom-sheet container");
+            } catch (Exception exception) { throw new IllegalStateException("Could not restore bottom-sheet behavior", exception); }
             // APKTool decodes TikTok's namespace-less, obfuscated custom attributes
             // as bare names. AAPT2 then drops their resource IDs. Reattach a proper
             // custom namespace so obtainStyledAttributes keeps the original IDs.

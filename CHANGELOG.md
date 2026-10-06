@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- Restore the shared bottom-sheet behavior declaration lost during resource decoding by Change package name. This repairs Share opening an empty dialog that blocks feed scrolling.
+
 ## 1.1.0
 
 First source release, based on the tested local 1.0.7 registration repair.

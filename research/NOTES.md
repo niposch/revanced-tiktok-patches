@@ -77,6 +77,37 @@ then dropped their IDs and caused `FlexLayout_Layout` inflation to fail. Restori
 that startup failure. These resource changes are needed for package renaming;
 the content filters alone do not rebuild resources.
 
+### Share dialog resource loss
+
+The separate installation could resume its Share fragment while keeping its
+view at zero dimensions. Back dismissed an empty fullscreen dialog and restored
+feed input. View-only instrumentation found an `IllegalArgumentException` from
+`BottomSheetBehavior.from()` during the dialog's `setContentView()` call. The
+dialog-suppression checker was disabled and the underlying `Dialog.show()` ran.
+
+The original shared dialog layout, resource `0x7f0d0b5e` (`layout/bl_`), assigns
+behavior attribute `0x7f060eed` (`c4g`) to string resource `0x7f111ebf` on its
+`@id/g3d` container. The original app resolves that string to
+`com.google.android.material.bottomsheet.BottomSheetBehavior`. APKTool instead
+decodes the reference as `@null`; recompilation keeps the null and loses the
+behavior. Declaring the verified class name directly in that layout repairs the
+resource without changing TikTok's Share implementation or the content filters.
+The repair checks for exactly one expected container and fails on an unexpected
+declaration rather than applying to a different layout silently.
+
+An absent entry in a desktop resource dump is insufficient evidence that a
+resource is unusable on Android. Compare compiled attributes and runtime resource
+resolution when rebuilding obfuscated resources. Other decoded null references
+need their own investigation; the Share repair is scoped to this verified layout.
+
+The repaired production APK passed five Share open/dismiss cycles with scrolling
+to a different feed item after each dismissal on a stock-boot Android 36.1
+emulator. Both Share views measured 1080 by 1105 pixels instead of zero. The
+201 examined Share method implementations matched the original semantically.
+Temporary root instrumentation was stopped before validation. No recipient was
+selected and nothing was sent. Physical-device validation is still pending;
+the emulator's intermittent video-rendering corruption remains separate work.
+
 ## Validation and takeaways
 
 Behavior checks cover independent and combined filters, immutable inputs,
