@@ -108,6 +108,56 @@ Temporary root instrumentation was stopped before validation. No recipient was
 selected and nothing was sent. Physical-device validation is still pending;
 the emulator's intermittent video-rendering corruption remains separate work.
 
+## Download permissions and missing media sources
+
+TikTok 47.1.4 separates download permissions from general sharing permissions.
+`AwemeACLShare` exposes `downloadGeneral`, `downloadMaskPanel` and
+`downloadSharePanel`, each an `ACLCommonShare` record. The investigated restricted
+video and photo post both carried `code = 1`, `showType = 0`, `transcode = 1`.
+Their native Share menus omitted Download. The Save action checks these records
+when constructing, showing and executing the action; changing only a visible
+button would leave later checks intact.
+
+The optional **Enable downloads** patch changes `code` to zero and `showType` to
+two when those three records are returned. It preserves a missing record as null,
+retains transcode mode and messages, and leaves general/third-party sharing
+records and the global `ACLCommonShare` getters unchanged. Targets check the
+original getter instructions and registers before insertion. An inserted null
+branch must bind to the existing return instruction: copying a locally assembled
+label into another instruction list can move its destination and fail Android
+verification. APK-derived checks and Android execution test that null path.
+
+The restricted video had no dedicated download or no-watermark source, while its
+H.264 playback source remained available. Native download selector `X/19k8.LIZ`
+can skip its playback fallback under an experiment flag. The patch adds that
+fallback immediately after the verified no-watermark lookup, only when its result
+is null. Existing source selection, cache-key construction and native saving then
+continue. A present download source remains selected. The photo pipeline uses
+its existing image URLs and requires no source substitution.
+
+These are client-side permission and source-selection changes. They cannot
+restore deleted/private media, expired or unavailable URLs, or bypass server
+authorization or protected media. Confirm success with a nonempty saved file and
+media decoding, rather than button visibility, a toast or a MediaStore row alone.
+Raw test links, post identifiers, screenshots and instrumentation stay private.
+
+Before/after validation used the same restricted video and photo post. Final
+tests ran on a stock-boot Android 36.1 emulator without Magisk or Frida processes:
+
+| Test | Before | After |
+| --- | --- | --- |
+| Restricted video | Download absent; permission code 1 / show type 0 | Saved 7,377,646-byte video, 720 by 1280 pixels, duration 46.718 seconds; playback confirmed in the media player. |
+| Restricted photo post | Download absent; permission code 1 / show type 0 | Saved 55,456-byte image, 1080 by 863 pixels; decoded pixels matched the displayed post. |
+
+The permission-only trial exposed Download but produced an empty video file.
+Source fallback was therefore part of the final tested patch. Physical file sizes
+were checked independently of MediaStore, and the final files had no pending
+write flag. Synthetic Android checks covered all three download getters: null
+preservation, permission changes, transcode/message preservation and unchanged
+general sharing permissions. APK integration checks cover download selection
+alone and together with both feed filters. These results establish the two tested
+cases, not universal saving across every post type or server configuration.
+
 ## Validation and takeaways
 
 Behavior checks cover independent and combined filters, immutable inputs,

@@ -14,7 +14,7 @@ ROOT_FILES = {'.editorconfig', '.gitattributes', '.gitignore', 'README.md',
               'LICENSE', 'VERSION', 'build.ps1', 'CHANGELOG.md', 'CONTRIBUTING.md'}
 RESEARCH_FILES = {'research/NOTES.md', 'research/ROOT_SIGNAL_ANALYSIS.md',
                   'research/EMULATOR_CAPTURE.md'}
-PATCHES = {'TikTokPatches', 'AlongsidePatch', 'RegistrationIdentityPatch'}
+PATCHES = {'TikTokPatches', 'AlongsidePatch', 'RegistrationIdentityPatch', 'EnableDownloadsPatch'}
 HELPERS = {'FeedFilter', 'RegistrationIdentity'}
 PREFIX = 'app/revanced/tiktok/patches/'
 PUBLIC_FILES = ROOT_FILES | RESEARCH_FILES | {

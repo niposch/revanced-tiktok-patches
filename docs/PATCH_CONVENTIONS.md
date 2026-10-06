@@ -38,6 +38,7 @@ An unnamed shared extension patch stays out of the Manager selection list.
 **Change package name** depends on **Fix device registration**, so a separate
 installation cannot omit the demonstrated repair accidentally. The two filters
 remain independently selectable and enabled by default; package changes stay opt-in.
+**Enable downloads** is also opt-in and has no resource or runtime-extension dependency.
 
 Upstream commonly uses Kotlin, Gradle and fingerprints. This small bundle retains
 its tested Java/PowerShell build without Maven credentials. Targets are restricted
@@ -46,7 +47,7 @@ instruction counts. These guards fail when the verified layout changes rather th
 claiming compatibility through a broad heuristic. Future version support should
 add evidence and version-specific fingerprints or guards.
 
-Only the four production patches and FeedFilter/RegistrationIdentity helpers enter
+Only the five production patches and FeedFilter/RegistrationIdentity helpers enter
 the public repository and bundle. Investigation tools and obsolete identity
 experiments are kept in ignored local storage. The public build has no diagnostic mode.
 

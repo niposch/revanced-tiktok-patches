@@ -16,6 +16,8 @@ import java.util.zip.*;
 public final class ValidatePatches {
     private static final String FEED = "Lcom/ss/android/ugc/aweme/feed/model/FeedItemList;";
     private static final String HELPER = "Lapp/revanced/tiktok/FeedFilter;";
+    private static final String ACL = "Lcom/ss/android/ugc/aweme/feed/model/ACLCommonShare;";
+    private static final String DOWNLOADS = "Lcom/ss/android/ugc/aweme/feed/model/AwemeACLShare;";
     private static void check(boolean condition, String message) {
         if (!condition) throw new AssertionError(message);
     }
@@ -23,7 +25,7 @@ public final class ValidatePatches {
         File dir = new File(args[2]);
         dir.mkdirs();
         Set<String> wanted = new HashSet<>(Arrays.asList(
-            FEED, "Lcom/ss/android/ugc/aweme/feed/model/Aweme;", "Lcom/ss/android/ugc/aweme/feed/model/AnchorCommonStruct;",
+            FEED, ACL, DOWNLOADS, "LX/19k8;", "Lcom/ss/android/ugc/aweme/feed/model/Aweme;", "Lcom/ss/android/ugc/aweme/feed/model/AnchorCommonStruct;",
             "Lcom/ss/android/ugc/aweme/feed/FeedApiService;", "Lcom/ss/android/ugc/aweme/feed/api/FeedApi;",
             "Lcom/ss/android/ugc/tiktok/ConvertHelper;",
             "Lcom/ss/android/ugc/aweme/gsonopt/OptJsonAdapterFor$com$ss$android$ugc$aweme$feed$model$FeedItemList;"
@@ -52,8 +54,9 @@ public final class ValidatePatches {
             Patch shop = (Patch) specs.getField("hideShopVideosPatch").get(null);
             Patch registration = (Patch) loader.loadClass("app.revanced.tiktok.patches.RegistrationIdentityPatch").getField("fixDeviceRegistrationPatch").get(null);
             Patch packageName = (Patch) loader.loadClass("app.revanced.tiktok.patches.AlongsidePatch").getField("changePackageNamePatch").get(null);
+            Patch downloads = (Patch) loader.loadClass("app.revanced.tiktok.patches.EnableDownloadsPatch").getField("enableDownloadsPatch").get(null);
             check(packageName.getDependencies().contains(registration), "Package change must depend on registration repair");
-            for (Patch[] selection : new Patch[][]{{ads}, {shop}, {ads, shop}, {shop, ads}}) {
+            for (Patch[] selection : new Patch[][]{{ads}, {shop}, {ads, shop}, {shop, ads}, {downloads}, {ads, shop, downloads}}) {
                 BytecodePatchContext context = new BytecodePatchContext(fixture, new File(dir, "patched"));
                 ResourcePatchContext resources = new ResourcePatchContext(new File(args[0]),
                     new File(dir, "resources"), new File(dir, "patched-resources"), null, null);
@@ -61,9 +64,29 @@ public final class ValidatePatches {
                 for (Patch dependency : ads.getDependencies()) dependency.getApply$patcher().invoke(context, resources);
                 String before = render(context.getClassDefs().get(HELPER));
                 String registrationBefore = render(context.getClassDefs().get("Lapp/revanced/tiktok/RegistrationIdentity;"));
+                String permissionsBefore = render(context.getClassDefs().get(ACL));
+                String otherSharingBefore = renderOtherSharing(context.getClassDefs().get(DOWNLOADS));
                 for (Patch patch : selection) patch.getApply$patcher().invoke(context, resources);
                 check(before.equals(render(context.getClassDefs().get(HELPER))), "A patch modified its runtime helper");
                 check(registrationBefore.equals(render(context.getClassDefs().get("Lapp/revanced/tiktok/RegistrationIdentity;"))), "A patch modified the registration runtime helper");
+                check(permissionsBefore.equals(render(context.getClassDefs().get(ACL))), "Global sharing permission accessors changed");
+                check(otherSharingBefore.equals(renderOtherSharing(context.getClassDefs().get(DOWNLOADS))), "Unrelated sharing methods changed");
+                if (Arrays.asList(selection).contains(downloads)) {
+                    int branches = 0;
+                    for (Method method : context.getClassDefs().get(DOWNLOADS).getMethods()) {
+                        if (!method.getName().matches("getDownload(General|MaskPanel|SharePanel)")) continue;
+                        for (var instruction : method.getImplementation().getInstructions()) {
+                            if (!(instruction instanceof BuilderOffsetInstruction)) continue;
+                            var target = ((BuilderOffsetInstruction) instruction).getTarget().getLocation().getInstruction();
+                            check(instruction.getOpcode() == Opcode.IF_EQZ && target != null
+                                && target.getOpcode() == Opcode.RETURN_OBJECT
+                                && ((OneRegisterInstruction) target).getRegisterA() == 0,
+                                "Missing download records must return null without a permission write");
+                            branches++;
+                        }
+                    }
+                    check(branches == 3, "Expected three guarded download getters");
+                }
                 boolean withFilter = Arrays.asList(selection).contains(ads) || Arrays.asList(selection).contains(shop);
                 ClassDef feed = context.getClassDefs().get(FEED);
                 for (Method method : feed.getMethods()) {
@@ -119,6 +142,20 @@ public final class ValidatePatches {
             for (var ins : method.getImplementation().getInstructions()) {
                 result.append(ins.getOpcode());
                 if (ins instanceof ReferenceInstruction) result.append(((ReferenceInstruction) ins).getReference());
+            }
+        }
+        return result.toString();
+    }
+    private static String renderOtherSharing(ClassDef cls) {
+        StringBuilder result = new StringBuilder();
+        for (Method method : cls.getMethods()) {
+            if (method.getName().matches("getDownload(General|MaskPanel|SharePanel)")) continue;
+            result.append(method);
+            if (method.getImplementation() == null) continue;
+            for (var ins : method.getImplementation().getInstructions()) {
+                result.append(ins.getOpcode());
+                if (ins instanceof ReferenceInstruction) result.append(((ReferenceInstruction) ins).getReference());
+                if (ins instanceof WideLiteralInstruction) result.append(((WideLiteralInstruction) ins).getWideLiteral());
             }
         }
         return result.toString();
