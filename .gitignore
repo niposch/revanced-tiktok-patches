@@ -3,6 +3,7 @@
 /build/
 /dist/
 /private/
+/.codex-remote-attachments/
 
 # Publish only reviewed summaries, never APK-derived source or device artifacts.
 /research/*

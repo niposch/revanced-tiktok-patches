@@ -3,6 +3,10 @@ package app.revanced.tiktok;
 import com.ss.android.ugc.aweme.feed.model.AnchorCommonStruct;
 import com.ss.android.ugc.aweme.feed.model.Aweme;
 import com.ss.android.ugc.aweme.feed.model.FeedItemList;
+import com.ss.android.ugc.aweme.feed.model.live.FYPCommerceStruct;
+import com.ss.android.ugc.aweme.feed.model.live.LiveRoomStruct;
+import com.ss.android.ugc.aweme.feed.model.live.NewLiveRoomStruct;
+import com.ss.android.ugc.aweme.feed.model.live.RoomFeedCellStruct;
 import java.util.ArrayList;
 import java.util.List;
 import android.util.Log;
@@ -77,6 +81,11 @@ public final class FeedFilter {
 
     private static boolean isShop(Aweme item) {
         if (item.getProductsCount() > 0 || item.getIsLiveHasProduct()) return true;
+        if (isShopRoom(item.newLiveRoomData)) return true;
+        RoomFeedCellStruct cell = item.getRoomFeedCellStruct();
+        // Feed cards can carry the parsed rawdata directly or inside a room cell.
+        // Read existing fields without forcing room conversion or parsing JSON.
+        if (cell != null && (isShopRoom(cell.newLiveRoomData) || isShopRoom(cell.room))) return true;
         List<?> products = item.getProductsInfo();
         if (products != null && !products.isEmpty()) return true;
         List<AnchorCommonStruct> anchors = item.getAnchors();
@@ -90,5 +99,20 @@ public final class FeedFilter {
             }
         }
         return false;
+    }
+
+    private static boolean isShopRoom(NewLiveRoomStruct room) {
+        return room != null && (room.hasCommerceGoods || hasProducts(room.fypCommerceStruct));
+    }
+
+    private static boolean isShopRoom(LiveRoomStruct room) {
+        return room != null && (room.hasCommerceGoods || hasProducts(room.fypCommerceStruct));
+    }
+
+    private static boolean hasProducts(FYPCommerceStruct commerce) {
+        // Permission to sell and historical goods alone do not establish that a
+        // stream is promoting products. Require current goods or preview products.
+        return commerce != null && ((commerce.productNum != null && commerce.productNum > 0)
+            || (commerce.popProductId != null && commerce.popProductId > 0));
     }
 }

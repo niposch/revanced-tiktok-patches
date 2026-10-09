@@ -12,7 +12,8 @@ This is a community project using ReVanced Patcher, with no official ReVanced af
 | Fix device registration | Corrects the renamed package's AppLog registration header. Requires no installed original app. | No; automatic dependency of Change package name |
 
 The Shop tab remains accessible. Shop filtering removes feed items, including organic
-product promotions carrying Shop metadata. It does not classify video, audio or captions.
+product promotions and LIVE cards carrying current goods or preview-product metadata.
+Ordinary LIVE streams and selling permission alone are preserved. It does not classify video, audio or captions.
 Unmarked promotions cannot be identified reliably, and non-Shop paid partnerships are
 not automatically classified as platform ads.
 
@@ -27,7 +28,7 @@ https://github.com/niposch/revanced-tiktok-patches/releases/latest/download/patc
 
 The feed follows the latest published release. It updates the patch bundle;
 apply the patches again to update an installed app.
-Alternatively, build or obtain `tiktok-feed-filters-1.2.0.rvp` and import it using
+Alternatively, build or obtain `tiktok-feed-filters-1.3.0.rvp` and import it using
 **Select from storage**. Select an original TikTok 47.1.4 APK.
 Enable either or both content filters. For a separate installation, also select
 **Change package name**; its dependency applies **Fix device registration**.
@@ -36,10 +37,17 @@ This changes the app's download permission records; unavailable media and server
 access restrictions are outside its scope.
 
 The bundle targets Patcher 22 and was used with Manager 2.6.0. Compatibility with
-other Patcher APIs or TikTok versions is not claimed. Remove older local copies of
-this bundle when switching to the remote feed or importing an update. A patched
-APK update must use the same signing key as the installed app. Keep your signing
-key locally.
+other Patcher APIs or TikTok versions is not claimed. Keep only one source for
+this bundle: remove older local imports and duplicate remote/local copies when
+switching sources. Manager can load the older classes even when only the newer
+source's patches are selected. A patched APK update must use the same signing
+key as the installed app. Keep your signing key locally.
+
+If Manager closes during **Decoding resources**, enable **Settings > Advanced >
+Run Patcher in another process (experimental)** and set **Patcher process memory
+limit** to **2048 MiB**. A 512 MiB app heap was insufficient to decode this APK.
+ReVanced also recommends the separate process for out-of-memory failures;
+see its [troubleshooting guide](https://github.com/ReVanced/revanced-manager/blob/main/docs/3_troubleshooting.md).
 
 The APK is supplied by the person patching the app. App binaries, signing keys and
 device captures are not included in source or release archives.
@@ -56,7 +64,7 @@ Set `JAVA_HOME` to your JDK if it is not detected under Program Files.
 The build downloads and checksums pinned official ReVanced CLI 6.0.0 and R8
 8.13.17 binaries into ignored `tools/`. It compiles Java definitions, runs runtime
 behavior tests, and packages both JVM classes and Android DEX in
-`dist/tiktok-feed-filters-1.2.0.rvp`. Neither Maven credentials nor Gradle is required.
+`dist/tiktok-feed-filters-1.3.0.rvp`. Neither Maven credentials nor Gradle is required.
 
 The source and bundle contain only the five production patches and two runtime
 helpers. The repository also includes the fixtures, tests and validation/release
@@ -68,7 +76,7 @@ build has no diagnostic mode and embeds no local certificates.
 
 ```powershell
 java -Xmx6g -jar tools/revanced-cli.jar patch input.apk `
-  -p dist/tiktok-feed-filters-1.2.0.rvp -b `
+  -p dist/tiktok-feed-filters-1.3.0.rvp -b `
   -e 'Change package name' `
   -o dist/tiktok-filtered.apk -t build/local-patch `
   --keystore dist/local-signing.keystore
@@ -88,7 +96,7 @@ keystore configuration. Local keystore recovery helpers are outside this reposit
 ## Validation and evidence
 
 `build.ps1` checks independent filters, list identity, survivor order, immutable
-input, null input, product anchors and registration JSON semantics.
+input, null input, product anchors, LIVE room metadata and registration JSON semantics.
 APK integration also checks download null branches and unchanged general sharing
 permissions, both alone and combined with the feed filters. Saving was verified
 on one previously restricted video and one restricted photo post on a stock-boot
@@ -97,10 +105,11 @@ APK-derived integration checks are run against a locally supplied original APK:
 
 ```powershell
 javac -cp tools/revanced-cli.jar -d build/validation-tools `
-  scripts/ValidateExtension.java scripts/ValidatePatches.java scripts/ValidateRegistration.java
-java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateExtension input.apk dist/tiktok-feed-filters-1.2.0.rvp
-java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidatePatches input.apk dist/tiktok-feed-filters-1.2.0.rvp build/integration
-java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateRegistration input.apk dist/tiktok-feed-filters-1.2.0.rvp build/registration-validation
+  scripts/ValidateExtension.java scripts/ValidatePatches.java scripts/ValidateRegistration.java scripts/ValidateResources.java
+java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateExtension input.apk dist/tiktok-feed-filters-1.3.0.rvp
+java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidatePatches input.apk dist/tiktok-feed-filters-1.3.0.rvp build/integration
+java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateRegistration input.apk dist/tiktok-feed-filters-1.3.0.rvp build/registration-validation
+java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateResources input.apk dist/tiktok-filtered.apk
 ```
 
 Registration repair restored nonzero device IDs in a controlled capture and
@@ -109,6 +118,16 @@ also installed successfully as an update on a physical device. Authentication
 on that device and an explicit run with the original app absent remain unverified.
 Both filter activations were observed; removal of real feed promotions and
 pagination after an entirely filtered batch still need device validation.
+
+Change package name preserves 56 behavior references that resource decoding lost.
+All 126 compiled layout behavior declarations were compared with the original APK.
+The poll crash was traced to its confirmation toast; the same toast can be tested
+directly without submitting a vote. See the research notes for runtime results
+and the limits of LIVE filtering validation.
+The initial phone build through Manager loaded older duplicate bundle classes;
+its successful install and Share smoke check do not validate these new repairs.
+The corrected desktop build passed the complete resource comparison and emulator
+toast check. A real poll vote and the corrected build on a phone remain pending.
 
 ## Documentation
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0
+
+- Restore all 56 missing bottom-sheet and scrolling behavior references during resource rebuilding, using each original compiled layout to verify the replacement. Replace the Share-only workaround and fix the confirmation toast that crashed after voting in comment polls.
+- Extend Hide Shop videos to inspect direct and nested LIVE room commerce metadata. Remove cards with current goods or preview products while preserving ordinary LIVE streams and selling permission alone.
+- Fix Change package name failing in ReVanced Manager when removing Play split metadata. Snapshot manifest elements before removal to handle both Android and desktop XML parsers.
+- Document the separate patcher process and larger heap needed when TikTok resource decoding exceeds Manager's default memory limit.
+- Add compiled-layout validation against the unmodified APK, alongside LIVE filter behavior and ABI checks.
+
 ## 1.2.0
 
 - Add optional Enable downloads for restricted videos and photo posts on TikTok 47.1.4. Scope permission changes to the three download records, preserving unrelated sharing permissions and existing download processing.

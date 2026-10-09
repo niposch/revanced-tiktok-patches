@@ -32,15 +32,20 @@ public final class AlongsidePatch {
                 if (!manifest.getAttribute("package").equals(OLD)) throw new IllegalStateException("Unexpected package");
                 manifest.setAttribute("package", NEW);
                 var nodes = document.getElementsByTagName("*");
+                // The JDK returns a live NodeList, but Android's DOM snapshots it.
+                // Copy before removing nodes so neither provider skips elements
+                // or revisits a detached node with no parent.
+                var elements = new ArrayList<Element>();
                 for (int i = 0; i < nodes.getLength(); i++) {
-                    Element node = (Element) nodes.item(i);
+                    elements.add((Element) nodes.item(i));
+                }
+                for (Element node : elements) {
                     String tag = node.getTagName();
                     String name = node.getAttribute("android:name");
                     // This standalone APK retains a dangling Play split resource
                     // reference; it is irrelevant after installing the fused APK.
                     if (tag.equals("meta-data") && name.equals("com.android.vending.splits")) {
                         node.getParentNode().removeChild(node);
-                        i--;
                         continue;
                     }
                     boolean component = tag.equals("application") || tag.equals("activity")
@@ -74,34 +79,10 @@ public final class AlongsidePatch {
                 }
                 System.out.println("Made " + fixed + " empty image placeholders compilable");
             } catch (Exception exception) { throw new IllegalStateException("Could not normalize empty resources", exception); }
-            // APKTool loses this obfuscated string reference while decoding
-            // 47.1.4. Without it the shared bottom-sheet dialog throws during
-            // setContentView, then displays an empty window that captures input.
-            // Use the class name verified against the original app's resources.
-            try (var document = context.document("res/layout/bl_.xml")) {
-                var nodes = document.getElementsByTagName("FrameLayout");
-                int restored = 0;
-                for (int i = 0; i < nodes.getLength(); i++) {
-                    Element node = (Element) nodes.item(i);
-                    // The document reader retains qualified names but does not
-                    // expose their namespace URI. APKTool may choose any prefix.
-                    boolean container = false;
-                    var named = node.getAttributes();
-                    for (int j = 0; j < named.getLength(); j++) {
-                        var attribute = named.item(j);
-                        if (attribute.getNodeName().endsWith(":id") && attribute.getNodeValue().equals("@id/g3d")) container = true;
-                    }
-                    if (!container) continue;
-                    String behavior = node.getAttribute("c4g");
-                    String expected = "com.google.android.material.bottomsheet.BottomSheetBehavior";
-                    if (!behavior.equals("@null") && !behavior.equals(expected)) {
-                        throw new IllegalStateException("Unexpected bottom-sheet behavior declaration");
-                    }
-                    node.setAttribute("c4g", expected);
-                    restored++;
-                }
-                if (restored != 1) throw new IllegalStateException("Expected one shared bottom-sheet container");
-            } catch (Exception exception) { throw new IllegalStateException("Could not restore bottom-sheet behavior", exception); }
+            // Preserve both known class references across every affected layout,
+            // including Share, poll confirmation toasts and scrolling containers.
+            try { ResourceRepairs.restoreBehaviors(context); }
+            catch (Exception exception) { throw new IllegalStateException("Could not restore original behavior references", exception); }
             // APKTool decodes TikTok's namespace-less, obfuscated custom attributes
             // as bare names. AAPT2 then drops their resource IDs. Reattach a proper
             // custom namespace so obtainStyledAttributes keeps the original IDs.

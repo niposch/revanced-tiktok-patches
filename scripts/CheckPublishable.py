@@ -14,13 +14,13 @@ ROOT_FILES = {'.editorconfig', '.gitattributes', '.gitignore', 'README.md',
               'LICENSE', 'VERSION', 'build.ps1', 'CHANGELOG.md', 'CONTRIBUTING.md'}
 RESEARCH_FILES = {'research/NOTES.md', 'research/ROOT_SIGNAL_ANALYSIS.md',
                   'research/EMULATOR_CAPTURE.md'}
-PATCHES = {'TikTokPatches', 'AlongsidePatch', 'RegistrationIdentityPatch', 'EnableDownloadsPatch'}
+PATCHES = {'TikTokPatches', 'AlongsidePatch', 'RegistrationIdentityPatch', 'EnableDownloadsPatch', 'ResourceRepairs'}
 HELPERS = {'FeedFilter', 'RegistrationIdentity'}
 PREFIX = 'app/revanced/tiktok/patches/'
 PUBLIC_FILES = ROOT_FILES | RESEARCH_FILES | {
     'docs/PATCH_CONVENTIONS.md', 'docs/RELEASING.md',
     'scripts/CheckPublishable.py', 'scripts/PackageRelease.py',
-    'scripts/ValidateExtension.java', 'scripts/ValidatePatches.java',
+    'scripts/ValidateExtension.java', 'scripts/ValidatePatches.java', 'scripts/ValidateResources.java',
     'scripts/ValidateRegistration.java', 'tests/FeedFilterTest.java',
     'tests/RegistrationIdentityTest.java', 'tests/PublicationTest.py',
     'stubs/src/android/util/Log.java', 'stubs/src/org/json/JSONObject.java',
@@ -28,6 +28,10 @@ PUBLIC_FILES = ROOT_FILES | RESEARCH_FILES | {
     'stubs/src/com/ss/android/ugc/aweme/feed/model/Aweme.java',
     'stubs/src/com/ss/android/ugc/aweme/feed/model/FeedItemList.java',
     'stubs/src/com/ss/android/ugc/aweme/feed/model/AnchorCommonStruct.java',
+    'stubs/src/com/ss/android/ugc/aweme/feed/model/live/NewLiveRoomStruct.java',
+    'stubs/src/com/ss/android/ugc/aweme/feed/model/live/LiveRoomStruct.java',
+    'stubs/src/com/ss/android/ugc/aweme/feed/model/live/RoomFeedCellStruct.java',
+    'stubs/src/com/ss/android/ugc/aweme/feed/model/live/FYPCommerceStruct.java',
 } | {f'extension/src/app/revanced/tiktok/{name}.java' for name in HELPERS} | {
     f'patches/src/{PREFIX}{name}.java' for name in PATCHES
 }

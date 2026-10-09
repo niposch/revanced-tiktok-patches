@@ -102,6 +102,19 @@ public final class TikTokPatches {
             requireMethod(aweme, "getIsLiveHasProduct", "Z");
             requireMethod(aweme, "getAnchors", "Ljava/util/List;");
             requireMethod(requireClass(context, MODEL + "AnchorCommonStruct;"), "getType", "I");
+            requireField(aweme, "newLiveRoomData", MODEL + "live/NewLiveRoomStruct;");
+            requireMethod(aweme, "getRoomFeedCellStruct", MODEL + "live/RoomFeedCellStruct;");
+            ClassDef cell = requireClass(context, MODEL + "live/RoomFeedCellStruct;");
+            requireField(cell, "newLiveRoomData", MODEL + "live/NewLiveRoomStruct;");
+            requireField(cell, "room", MODEL + "live/LiveRoomStruct;");
+            for (String room : new String[]{"NewLiveRoomStruct", "LiveRoomStruct"}) {
+                ClassDef cls = requireClass(context, MODEL + "live/" + room + ";");
+                requireField(cls, "hasCommerceGoods", "Z");
+                requireField(cls, "fypCommerceStruct", MODEL + "live/FYPCommerceStruct;");
+            }
+            ClassDef commerce = requireClass(context, MODEL + "live/FYPCommerceStruct;");
+            requireField(commerce, "productNum", "Ljava/lang/Long;");
+            requireField(commerce, "popProductId", "Ljava/lang/Long;");
         } else {
             requireField(aweme, "_isAd", "Z");
             requireField(aweme, "_isSoftAd", "Z");
