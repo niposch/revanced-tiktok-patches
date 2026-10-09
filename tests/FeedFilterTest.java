@@ -1,6 +1,7 @@
 import app.revanced.tiktok.FeedFilter;
 import com.ss.android.ugc.aweme.feed.model.*;
 import com.ss.android.ugc.aweme.feed.model.live.*;
+import com.ss.android.ugc.aweme.commerce.AwemeCommerceStruct;
 import java.util.*;
 
 public final class FeedFilterTest {
@@ -13,6 +14,9 @@ public final class FeedFilterTest {
         link.type = type;
         item.anchors = Arrays.asList(null, link);
         return item;
+    }
+    private static FeedRoomTag tag(long id, String content) {
+        FeedRoomTag tag = new FeedRoomTag(); tag.id = id; tag.content = content; return tag;
     }
     public static void main(String[] args) {
         Aweme normal = new Aweme(), ad = new Aweme(), softAd = new Aweme();
@@ -33,6 +37,18 @@ public final class FeedFilterTest {
         check(survivors.equals(Arrays.asList(normal, null)), "Remove explicit ads, preserve order/nulls");
         check(original.size() == 4 && feed.items == survivors, "Copy immutable input and update model size");
         check(FeedFilter.ads(feed, survivors) == survivors, "Repeat filtering is idempotent");
+        Aweme paid = new Aweme(), selfPromotion = new Aweme(), undisclosed = new Aweme();
+        paid.commerce = new AwemeCommerceStruct(); paid.commerce.brandedContentType = 8;
+        selfPromotion.commerce = new AwemeCommerceStruct(); selfPromotion.commerce.brandOrganicType = 1;
+        undisclosed.commerce = new AwemeCommerceStruct(); undisclosed.commerce.brandedContentType = -1;
+        List<Aweme> partnerships = Collections.unmodifiableList(Arrays.asList(normal, paid, undisclosed, selfPromotion));
+        check(FeedFilter.ads(feed, partnerships).equals(Arrays.asList(normal, undisclosed)), "Remove disclosed promotions without ad flags");
+        check(FeedFilter.shop(feed, partnerships) == partnerships, "Non-Shop partnerships remain independently selectable");
+        check(partnerships.size() == 4, "Promotion filtering preserves immutable input");
+        paid.commerce.brandedContentType = 1;
+        check(FeedFilter.ads(feed, Collections.singletonList(paid)).isEmpty(), "Other positive branded types use native predicate");
+        paid.commerce.brandedContentType = 0;
+        check(FeedFilter.ads(feed, Collections.singletonList(paid)).size() == 1, "Commerce record alone is not an ad");
         for (int type : new int[]{3, 6, 33, 35, 89}) {
             Aweme product = anchor(type);
             List<Aweme> items = Arrays.asList(normal, product, normal);
@@ -74,6 +90,30 @@ public final class FeedFilterTest {
         check(FeedFilter.shop(feed, Collections.singletonList(directLive)).size() == 1, "Nullable boxed LIVE commerce fields are safe");
         cellLive.roomFeedCellStruct.newLiveRoomData = null;
         check(FeedFilter.shop(feed, Collections.singletonList(cellLive)).size() == 1, "Empty room cells remain safe");
+        for (String field : new String[]{"firstTags", "subTags", "bottomTags", "bottomSubTags", "bcToggleTags", "boostToggleTags"}) {
+            Aweme tagged = new Aweme(); tagged.newLiveRoomData = new NewLiveRoomStruct();
+            FeedRoomTagList tags = new FeedRoomTagList(); tagged.newLiveRoomData.feedRoomTagList = tags;
+            try { FeedRoomTagList.class.getField(field).set(tags, Arrays.asList(null, tag(1000001, null))); }
+            catch (ReflectiveOperationException exception) { throw new AssertionError(exception); }
+            check(FeedFilter.shop(feed, Arrays.asList(normal, tagged, ordinaryLive)).equals(Arrays.asList(normal, ordinaryLive)), "Commerce badge without product flags: " + field);
+            check(FeedFilter.ads(feed, Collections.singletonList(tagged)).size() == 1, "Shop badge without disclosure is not an ad: " + field);
+        }
+        FeedRoomTagList shoppingTags = new FeedRoomTagList(); shoppingTags.bottomTags = Arrays.asList(null, tag(1000001, "Localized Shop label"));
+        cellLive.roomFeedCellStruct.newLiveRoomData = new NewLiveRoomStruct(); cellLive.roomFeedCellStruct.newLiveRoomData.feedRoomTagList = shoppingTags;
+        legacyLive.roomFeedCellStruct.room.hasCommerceGoods = false; legacyLive.roomFeedCellStruct.room.fypCommerceStruct = null;
+        legacyLive.roomFeedCellStruct.room.feedRoomTagList = shoppingTags;
+        check(FeedFilter.shop(feed, Arrays.asList(cellLive, legacyLive, ordinaryLive)).equals(Collections.singletonList(ordinaryLive)), "Shop badges work in both nested room representations");
+        FeedRoomTagList recommendation = new FeedRoomTagList();
+        recommendation.firstTags = Arrays.asList(null, tag(4, "Paid partnership")); recommendation.subTags = Arrays.asList(tag(1007, "Recommendation"));
+        recommendation.bcToggleTags = Arrays.asList(null, tag(-1, null), tag(0, ""));
+        ordinaryLive.newLiveRoomData.feedRoomTagList = recommendation;
+        check(FeedFilter.shop(feed, ordinaryLives) == ordinaryLives && FeedFilter.ads(feed, ordinaryLives) == ordinaryLives, "Retain ordinary LIVE tags and empty disclosures, regardless of text");
+        FeedRoomTagList disclosure = new FeedRoomTagList(); disclosure.bcToggleTags = Arrays.asList(null, tag(12, "Localized commercial disclosure"));
+        directLive.newLiveRoomData.feedRoomTagList = disclosure;
+        cellLive.roomFeedCellStruct.newLiveRoomData.feedRoomTagList = disclosure;
+        legacyLive.roomFeedCellStruct.room.feedRoomTagList = disclosure;
+        check(FeedFilter.ads(feed, Arrays.asList(directLive, ordinaryLive, cellLive, legacyLive)).equals(ordinaryLives), "Remove disclosed promotional LIVE cards in all three representations");
+        check(FeedFilter.shop(feed, Collections.singletonList(directLive)).size() == 1, "Non-Shop LIVE disclosure remains independently selectable");
         Aweme shop = anchor(35);
         List<Aweme> mixed = Arrays.asList(ad, shop, normal, softAd);
         check(FeedFilter.shop(feed, FeedFilter.ads(feed, mixed)).equals(Collections.singletonList(normal)), "Combined selection");

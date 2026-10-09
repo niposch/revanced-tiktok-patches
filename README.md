@@ -5,7 +5,7 @@ This is a community project using ReVanced Patcher, with no official ReVanced af
 
 | Patch | Behavior | Selected by default |
 | --- | --- | --- |
-| Hide ads | Removes explicitly flagged ads and clears preloaded feed ads. | Yes |
+| Hide ads | Removes flagged ads, paid partnerships and disclosed promotional videos/LIVE cards; clears preloaded feed ads. | Yes |
 | Hide Shop videos | Removes whole videos with product links, product metadata or shopping live promotions. | Yes |
 | Enable downloads | Enables saving videos and photos whose download permission disables or hides the action. | No |
 | Change package name | Installs as TikTok Filtered (`com.zhiliaoapp.musically.filtered`) with separate app data. Includes the registration repair. | No |
@@ -13,9 +13,11 @@ This is a community project using ReVanced Patcher, with no official ReVanced af
 
 The Shop tab remains accessible. Shop filtering removes feed items, including organic
 product promotions and LIVE cards carrying current goods or preview-product metadata.
-Ordinary LIVE streams and selling permission alone are preserved. It does not classify video, audio or captions.
-Unmarked promotions cannot be identified reliably, and non-Shop paid partnerships are
-not automatically classified as platform ads.
+Ordinary LIVE streams and selling permission alone are preserved. Shop commerce
+tags are recognized even when goods/count fields are absent. Hide ads also removes
+creator-disclosed paid partnerships and self-promotions, including commercial LIVE
+disclosures. Neither filter classifies video, audio or captions. Unmarked promotions
+cannot be identified reliably.
 
 ## Use with ReVanced Manager
 
@@ -28,7 +30,7 @@ https://github.com/niposch/revanced-tiktok-patches/releases/latest/download/patc
 
 The feed follows the latest published release. It updates the patch bundle;
 apply the patches again to update an installed app.
-Alternatively, build or obtain `tiktok-feed-filters-1.3.0.rvp` and import it using
+Alternatively, build or obtain `tiktok-feed-filters-1.4.0.rvp` and import it using
 **Select from storage**. Select an original TikTok 47.1.4 APK.
 Enable either or both content filters. For a separate installation, also select
 **Change package name**; its dependency applies **Fix device registration**.
@@ -64,7 +66,7 @@ Set `JAVA_HOME` to your JDK if it is not detected under Program Files.
 The build downloads and checksums pinned official ReVanced CLI 6.0.0 and R8
 8.13.17 binaries into ignored `tools/`. It compiles Java definitions, runs runtime
 behavior tests, and packages both JVM classes and Android DEX in
-`dist/tiktok-feed-filters-1.3.0.rvp`. Neither Maven credentials nor Gradle is required.
+`dist/tiktok-feed-filters-1.4.0.rvp`. Neither Maven credentials nor Gradle is required.
 
 The source and bundle contain only the five production patches and two runtime
 helpers. The repository also includes the fixtures, tests and validation/release
@@ -76,7 +78,7 @@ build has no diagnostic mode and embeds no local certificates.
 
 ```powershell
 java -Xmx6g -jar tools/revanced-cli.jar patch input.apk `
-  -p dist/tiktok-feed-filters-1.3.0.rvp -b `
+  -p dist/tiktok-feed-filters-1.4.0.rvp -b `
   -e 'Change package name' `
   -o dist/tiktok-filtered.apk -t build/local-patch `
   --keystore dist/local-signing.keystore
@@ -96,7 +98,8 @@ keystore configuration. Local keystore recovery helpers are outside this reposit
 ## Validation and evidence
 
 `build.ps1` checks independent filters, list identity, survivor order, immutable
-input, null input, product anchors, LIVE room metadata and registration JSON semantics.
+input, null input, product anchors, LIVE commerce/disclosure tags, branded-content
+predicates and registration JSON semantics.
 APK integration also checks download null branches and unchanged general sharing
 permissions, both alone and combined with the feed filters. Saving was verified
 on one previously restricted video and one restricted photo post on a stock-boot
@@ -106,9 +109,9 @@ APK-derived integration checks are run against a locally supplied original APK:
 ```powershell
 javac -cp tools/revanced-cli.jar -d build/validation-tools `
   scripts/ValidateExtension.java scripts/ValidatePatches.java scripts/ValidateRegistration.java scripts/ValidateResources.java
-java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateExtension input.apk dist/tiktok-feed-filters-1.3.0.rvp
-java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidatePatches input.apk dist/tiktok-feed-filters-1.3.0.rvp build/integration
-java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateRegistration input.apk dist/tiktok-feed-filters-1.3.0.rvp build/registration-validation
+java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateExtension input.apk dist/tiktok-feed-filters-1.4.0.rvp
+java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidatePatches input.apk dist/tiktok-feed-filters-1.4.0.rvp build/integration
+java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateRegistration input.apk dist/tiktok-feed-filters-1.4.0.rvp build/registration-validation
 java -Xmx3g -cp 'tools/revanced-cli.jar;build/validation-tools' ValidateResources input.apk dist/tiktok-filtered.apk
 ```
 
@@ -128,6 +131,12 @@ The initial phone build through Manager loaded older duplicate bundle classes;
 its successful install and Share smoke check do not validate these new repairs.
 The corrected desktop build passed the complete resource comparison and emulator
 toast check. A real poll vote and the corrected build on a phone remain pending.
+
+Version 1.4.0 was installed and tested in an emulator. Replaying an actual
+paid-partnership video model removed it with Hide ads; 1.3.0 retained the same
+model. Native Android LIVE fixtures verified tag-only Shop and commercial
+disclosure removal with ordinary LIVE retention and independent selection. The
+specific supplied LIVE broadcast was not verified in a fresh For You response.
 
 ## Documentation
 

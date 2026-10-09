@@ -5,6 +5,8 @@ import com.ss.android.ugc.aweme.feed.model.live.RoomFeedCellStruct;
 
 /** Compile/test fixture only. Never included in the extension or patch bundle. */
 public class Aweme {
+    public com.ss.android.ugc.aweme.commerce.AwemeCommerceStruct commerce;
+    public com.ss.android.ugc.aweme.commerce.AwemeCommerceStruct getCommerceVideoAuthInfo() { return commerce; }
     public boolean _isAd;
     public boolean _isSoftAd;
     public int productsCount;

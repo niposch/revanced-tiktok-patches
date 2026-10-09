@@ -44,7 +44,7 @@ public final class TikTokPatches {
         return PatchKt.bytecodePatch(
             shop ? "Hide Shop videos" : "Hide ads",
             shop ? "Removes product-linked videos and shopping live promotions from feeds."
-                 : "Removes sponsored feed items and preloaded feed ads.",
+                 : "Removes ads, paid partnerships and disclosed promotional content from feeds.",
             true,
             builder -> {
                 builder.compatibleWith(builder.invoke("com.zhiliaoapp.musically", "47.1.4"));
@@ -96,17 +96,27 @@ public final class TikTokPatches {
         ClassDef feed = requireClass(context, FEED);
         ClassDef aweme = requireClass(context, MODEL + "Aweme;");
         requireField(feed, "items", "Ljava/util/List;");
+        requireField(aweme, "newLiveRoomData", MODEL + "live/NewLiveRoomStruct;");
+        requireMethod(aweme, "getRoomFeedCellStruct", MODEL + "live/RoomFeedCellStruct;");
+        ClassDef cell = requireClass(context, MODEL + "live/RoomFeedCellStruct;");
+        requireField(cell, "newLiveRoomData", MODEL + "live/NewLiveRoomStruct;");
+        requireField(cell, "room", MODEL + "live/LiveRoomStruct;");
+        for (String room : new String[]{"NewLiveRoomStruct", "LiveRoomStruct"}) {
+            requireField(requireClass(context, MODEL + "live/" + room + ";"), "feedRoomTagList", MODEL + "live/FeedRoomTagList;");
+        }
+        ClassDef tags = requireClass(context, MODEL + "live/FeedRoomTagList;");
+        for (String field : new String[]{"firstTags", "subTags", "bottomTags", "bottomSubTags", "bcToggleTags", "boostToggleTags"}) {
+            requireField(tags, field, "Ljava/util/List;");
+        }
+        ClassDef tag = requireClass(context, MODEL + "live/FeedRoomTag;");
+        requireField(tag, "id", "J");
+        requireField(tag, "content", "Ljava/lang/String;");
         if (shop) {
             requireMethod(aweme, "getProductsCount", "I");
             requireMethod(aweme, "getProductsInfo", "Ljava/util/List;");
             requireMethod(aweme, "getIsLiveHasProduct", "Z");
             requireMethod(aweme, "getAnchors", "Ljava/util/List;");
             requireMethod(requireClass(context, MODEL + "AnchorCommonStruct;"), "getType", "I");
-            requireField(aweme, "newLiveRoomData", MODEL + "live/NewLiveRoomStruct;");
-            requireMethod(aweme, "getRoomFeedCellStruct", MODEL + "live/RoomFeedCellStruct;");
-            ClassDef cell = requireClass(context, MODEL + "live/RoomFeedCellStruct;");
-            requireField(cell, "newLiveRoomData", MODEL + "live/NewLiveRoomStruct;");
-            requireField(cell, "room", MODEL + "live/LiveRoomStruct;");
             for (String room : new String[]{"NewLiveRoomStruct", "LiveRoomStruct"}) {
                 ClassDef cls = requireClass(context, MODEL + "live/" + room + ";");
                 requireField(cls, "hasCommerceGoods", "Z");
@@ -116,6 +126,10 @@ public final class TikTokPatches {
             requireField(commerce, "productNum", "Ljava/lang/Long;");
             requireField(commerce, "popProductId", "Ljava/lang/Long;");
         } else {
+            String commerce = "Lcom/ss/android/ugc/aweme/commerce/AwemeCommerceStruct;";
+            requireMethod(aweme, "getCommerceVideoAuthInfo", commerce);
+            requireMethod(requireClass(context, commerce), "isBrandedContent", "Z");
+            requireMethod(requireClass(context, commerce), "isBrandOrganicContent", "Z");
             requireField(aweme, "_isAd", "Z");
             requireField(aweme, "_isSoftAd", "Z");
             requireField(feed, "preloadAds", "Ljava/util/List;");

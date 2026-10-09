@@ -22,7 +22,7 @@ and public app/package metadata are useful and sufficient here.
 
 ```powershell
 ./build.ps1
-python scripts/CheckPublishable.py --bundle dist/tiktok-feed-filters-1.3.0.rvp
+python scripts/CheckPublishable.py --bundle dist/tiktok-feed-filters-1.4.0.rvp
 ```
 
 The checker reads staged Git blobs by default. It enforces an explicit file allowlist

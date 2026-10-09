@@ -32,6 +32,9 @@ public final class ValidatePatches {
             "Lcom/ss/android/ugc/aweme/feed/model/live/LiveRoomStruct;",
             "Lcom/ss/android/ugc/aweme/feed/model/live/RoomFeedCellStruct;",
             "Lcom/ss/android/ugc/aweme/feed/model/live/FYPCommerceStruct;",
+            "Lcom/ss/android/ugc/aweme/feed/model/live/FeedRoomTag;",
+            "Lcom/ss/android/ugc/aweme/feed/model/live/FeedRoomTagList;",
+            "Lcom/ss/android/ugc/aweme/commerce/AwemeCommerceStruct;",
             "Lcom/ss/android/ugc/aweme/gsonopt/OptJsonAdapterFor$com$ss$android$ugc$aweme$feed$model$FeedItemList;"
         ));
         DexPool pool = new DexPool(Opcodes.getDefault());

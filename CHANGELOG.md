@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.0
+
+- Extend Hide ads to remove creator-disclosed paid partnerships and self-promotional videos that do not carry platform ad flags. Use TikTok's native branded-content predicates.
+- Filter commercial LIVE disclosures through their dedicated tag metadata. Retain ordinary LIVE recommendation tags and empty disclosures.
+- Extend Hide Shop videos to recognize native commerce tag `1000001` across LIVE room tag lists, including cards without current-goods/product-count flags. Match the semantic ID rather than translated label text.
+- Add positive/negative behavior cases and APK-derived checks for all newly referenced model members. Keep the same five selectable patches.
+
 ## 1.3.0
 
 - Restore all 56 missing bottom-sheet and scrolling behavior references during resource rebuilding, using each original compiled layout to verify the replacement. Replace the Share-only workaround and fix the confirmation toast that crashed after voting in comment polls.

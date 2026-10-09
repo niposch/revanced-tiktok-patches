@@ -14,7 +14,8 @@ public final class ValidateExtension {
             for (ZipEntry entry : Collections.list(zip.entries())) {
                 if (!entry.getName().matches("classes[0-9]*\\.dex")) continue;
                 var dex = DexBackedDexFile.fromInputStream(Opcodes.getDefault(), new BufferedInputStream(zip.getInputStream(entry)));
-                for (ClassDef cls : dex.getClasses()) if (cls.getType().startsWith("Lcom/ss/android/ugc/aweme/feed/model/")) app.put(cls.getType(), cls);
+                for (ClassDef cls : dex.getClasses()) if (cls.getType().startsWith("Lcom/ss/android/ugc/aweme/feed/model/")
+                    || cls.getType().equals("Lcom/ss/android/ugc/aweme/commerce/AwemeCommerceStruct;")) app.put(cls.getType(), cls);
             }
         }
         Set<String> checked = new TreeSet<>();

@@ -208,6 +208,48 @@ metadata, so removal of that particular broadcast in an actual For You response
 still needs observation. Shop access and opening a LIVE directly are unchanged;
 the patch filters feed cards.
 
+## Disclosed promotions and LIVE commerce tags (1.4.0)
+
+The platform ad flags do not cover every creator advertisement. An actual public
+video labeled Paid partnership had both `_isAd` and `_isSoftAd` false, while
+`Aweme.getCommerceVideoAuthInfo()` returned an `AwemeCommerceStruct` with
+`brandedContentType = 8` and `brandOrganicType = 0`. TikTok's native predicates
+`isBrandedContent()` and `isBrandOrganicContent()` check whether their respective
+types are positive. Hide ads now uses those predicates rather than guessing from
+an anchor, captions or translated disclosure text. A commerce record by itself,
+with zero/negative types, is insufficient.
+
+LIVE cards also carry `FeedRoomTagList` on both feed room classes. The native
+commerce-card renderer recognizes tag ID `1000001`, independently of current
+goods/count fields. Hide Shop videos checks this ID across the first, sub, bottom,
+bottom-sub, commercial-disclosure and boost tag lists. Null entries and unknown
+tag IDs remain safe. The separate `bcToggleTags` field supplies commercial labels
+to `BcToggleInfoWidget`; Hide ads removes LIVE cards with a nonempty disclosure
+there. Ordinary recommendations and boost tags do not become ads merely because
+their text looks promotional. No additional JSON parsing or room conversion is
+required in the feed filter.
+
+Before/after Android checks used the exact video model captured from the
+unmodified app, replayed through TikTok's configured Gson decoder. Version 1.3.0
+retained that video; 1.4.0 removed it while retaining the ordinary control. The
+Shop-only selection still retained that non-Shop partnership. Controlled native
+LIVE models exercised direct raw rooms and both nested room representations:
+1.3.0 retained tag-only commerce cards and commercial disclosures; 1.4.0 removed
+each through its corresponding filter. Ordinary LIVE recommendations, nulls,
+immutable input and independent selection were preserved. These LIVE cases test
+the actual Android model classes and production APK, but are not a replay of the
+supplied broadcast's full For You response.
+Fresh feed sampling was interrupted by a native host-emulator crash during touch
+input, including with an alternative software renderer. That limitation is
+separate from the successful Android model and filter execution checks.
+
+Behavior tests include null/empty disclosures, all six tag-list placements,
+noncommercial metadata, unknown IDs, multiple positive branded types and survivor
+order. The extension's 32 referenced TikTok members passed APK-derived ABI checks,
+and all six patch selection combinations passed integration checks. The full
+updated APK retained all 126 compiled layout behavior declarations. Captures,
+public test links and account/device data remain private.
+
 ## Download permissions and missing media sources
 
 TikTok 47.1.4 separates download permissions from general sharing permissions.
@@ -262,7 +304,7 @@ cases, not universal saving across every post type or server configuration.
 
 Behavior checks cover independent and combined filters, immutable inputs,
 survivor order, clean-list identity, null values and all-filtered batches.
-APK-derived checks verify all 19 referenced TikTok members, four getter returns,
+APK-derived checks verify all 32 referenced TikTok members, four getter returns,
 six response returns and four preload writes. Branches cannot bypass the getter
 filter, and fixture models never enter the extension.
 

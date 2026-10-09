@@ -32,6 +32,9 @@ PUBLIC_FILES = ROOT_FILES | RESEARCH_FILES | {
     'stubs/src/com/ss/android/ugc/aweme/feed/model/live/LiveRoomStruct.java',
     'stubs/src/com/ss/android/ugc/aweme/feed/model/live/RoomFeedCellStruct.java',
     'stubs/src/com/ss/android/ugc/aweme/feed/model/live/FYPCommerceStruct.java',
+    'stubs/src/com/ss/android/ugc/aweme/feed/model/live/FeedRoomTag.java',
+    'stubs/src/com/ss/android/ugc/aweme/feed/model/live/FeedRoomTagList.java',
+    'stubs/src/com/ss/android/ugc/aweme/commerce/AwemeCommerceStruct.java',
 } | {f'extension/src/app/revanced/tiktok/{name}.java' for name in HELPERS} | {
     f'patches/src/{PREFIX}{name}.java' for name in PATCHES
 }
